@@ -2,7 +2,7 @@ from collections import defaultdict, deque
 
 with open("day6.txt") as f:
     pairs = [l.strip().split(")") for l in f.readlines()]
-#print(pairs)
+# print(pairs)
 objects = set()
 parents = {}
 connections = defaultdict(list)
