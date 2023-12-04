@@ -10,9 +10,11 @@ import (
 
 func containsSubstring(s string, substrings []string) ([]string, bool) {
 	var matchingKeys []string
-	for i := 0; i < len(s); i++ {
+	slen := len(s)
+	for i := 0; i < slen; i++ {
 		for _, sub := range substrings {
-			if i+len(sub) <= len(s) && s[i:i+len(sub)] == sub {
+			sublen := len(sub)
+			if i+sublen <= slen && s[i:i+sublen] == sub {
 				matchingKeys = append(matchingKeys, sub)
 			}
 		}
