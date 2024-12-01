@@ -14,43 +14,19 @@ import (
 	"unicode"
 )
 
-// Helper function to calculate the absolute value
-func abs(x int) int {
-	if x < 0 {
-		return -x
-	}
-	return x
-}
-
-func nearbyNumber(numCords [][]int, symbolCord []int, schematic [][]string) bool {
-	rowOffsets := []int{-1, 0, 1}
-	colOffsets := []int{-1, 0, 1}
-	for _, rowOffset := range rowOffsets {
-		for _, colOffset := range colOffsets {
-			row, col := symbolCord[0]+rowOffset, symbolCord[1]+colOffset
-
-			// Check if the new position is within bounds
-			if row >= 0 && row < len(schematic) && col >= 0 && col < len(schematic[0]) {
-
-			}
+func seenCord(seenCords [][]int, cord []int) (seen bool) {
+	for _, s := range seenCords {
+		if s[0] == cord[0] && s[1] == cord[1] {
+			fmt.Println("skipping:", s[0], s[1])
+			return true
 		}
 	}
 	return false
 }
 
-func nearbySymbol(target []int, symCoordinates [][]int) (nearSymbol bool, symbolCord []int) {
-	for _, pair := range symCoordinates {
-		// Check if pair coordinates are within a range around the target coordinates
-		if abs(pair[0]-target[0]) <= 1 && abs(pair[1]-target[1]) <= 1 {
-			return true, pair
-		}
-	}
-	return false, nil
-}
-
 func main() {
 
-	readFile, err := os.Open("test.txt")
+	readFile, err := os.Open("input.txt")
 
 	if err != nil {
 		fmt.Println(err)
@@ -72,54 +48,68 @@ func main() {
 
 	fmt.Println(schematic)
 
-	n := []int{}
-	symCoordinates := [][]int{}
-	var s string
+	answers := []int{}
 
 	// find symbols
 	for r, row := range schematic {
 		for c, char := range row {
 			if char == "*" {
-				symCoordinates = append(symCoordinates, []int{r, c})
+				var sets []int
+				var seenCords [][]int
+				// check the nine spots around the symbol
+				rowOffsets := []int{-1, 0, 1}
+				colOffsets := []int{-1, 0, 1}
+				// 6 1 8 . .
+				// . . * . .
+				// 7 8 6 . .
+				for _, rowOffset := range rowOffsets {
+					for _, colOffset := range colOffsets {
+						ri, ci := r+rowOffset, c+colOffset
+						var num string
+						// Check if the new position is within bounds
+						if ri >= 0 && ri < len(schematic) && ci >= 0 && ci < len(schematic[0]) {
+							if unicode.IsDigit([]rune(schematic[ri][ci])[0]) && !seenCord(seenCords, []int{ri, ci}) {
+								seenCords = append(seenCords, []int{ri, ci})
+								num += schematic[ri][ci]
+								fmt.Println("r:", r, "c:", c, "ri:", ri, "ci:", ci, "num:", num)
+								for ci > 0 && unicode.IsDigit([]rune(schematic[ri][ci-1])[0]) {
+									fmt.Println("left:", ci, schematic[ri][ci])
+									ci--
+									seenCords = append(seenCords, []int{ri, ci})
+									num = schematic[ri][ci] + num
+								}
+								fmt.Println("ci:", ci, "num:", num, "seen:", seenCords)
+								for ci+1 < len(schematic[0]) && unicode.IsDigit([]rune(schematic[ri][ci+1])[0]) {
+									if seenCord(seenCords, []int{ri, ci + 1}) {
+										ci++
+										continue
+									}
+									fmt.Println("right:", ci, schematic[ri][ci])
+									ci++
+									seenCords = append(seenCords, []int{ri, ci})
+									num = num + schematic[ri][ci]
+								}
+								set, _ := strconv.Atoi(num)
+								sets = append(sets, set)
+								fmt.Println("ci:", ci, "num:", num, "sets:", sets, "seen", seenCords)
+							}
+						}
+					}
+				}
+				if len(sets) == 2 {
+					s := sets[0] * sets[1]
+					fmt.Println(s, sets[0], sets[1])
+					answers = append(answers, s)
+				}
 			}
 		}
 	}
-	fmt.Println(symCoordinates)
 
-	// find part numbers near gears
-	for r, row := range schematic {
-		var nearSymbol bool
-		var symbolCord []int
-		var numCords [][]int
-		for c, char := range row {
-			if unicode.IsDigit([]rune(char)[0]) {
-				s += char
-				cord := []int{r, c}
-				numCords = append(numCords, cord)
-				if !nearSymbol {
-					nearSymbol, symbolCord = nearbySymbol(cord, symCoordinates)
-				}
-			} else if char == "." && len(s) == 0 {
-				continue
-			}
-
-			if (!unicode.IsDigit([]rune(char)[0]) && len(s) > 0) || (c == len(row)-1 && len(s) > 0) {
-				num, _ := strconv.Atoi(s)
-				if nearSymbol && nearbyNumber(numCords, symbolCord, schematic) {
-					n = append(n, num)
-				}
-				// we know this is the end of the number, reset for the next set
-				nearSymbol = false
-				s = ""
-			}
-		}
-		fmt.Println(n)
+	answer := 0
+	for _, r := range answers {
+		answer += r
 	}
 
-	var answer int
-	for _, num := range n {
-		answer += num
-	}
 	fmt.Println(answer)
 
 	readFile.Close()

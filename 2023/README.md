@@ -28,8 +28,6 @@ func main() {
         // strconv.Atoi(fileScanner.Text()) toint
 	}
 
-	readFile.Close()
-
 	fmt.Println("end")
 
 }
